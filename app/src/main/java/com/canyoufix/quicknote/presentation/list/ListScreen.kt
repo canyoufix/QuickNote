@@ -64,11 +64,23 @@ fun ListScreen(modifier: Modifier = Modifier) {
         text = ""
     }
 
-    fun deleteValue() {
+    fun deleteValue(valueToRemove: String) {
         scope.launch {
             prefs.updateData {
+                // Copy prefs
                 val prefs = it.toMutablePreferences()
-                //prefs[PrefsDataKey].
+
+                // Get current set from prefs
+                val currentSet = prefs[PrefsDataKey]?.toMutableSet()
+
+                // Remove value
+                currentSet?.remove(valueToRemove)
+
+                // Save modified set to prefs
+                prefs[PrefsDataKey] = currentSet as Set<String>
+                //prefs[PrefsDataKey] = currentSet?.toSet() as Set<String>
+
+                // Save to preferences
                 prefs.toPreferences()
             }
         }
@@ -111,7 +123,7 @@ fun ListScreen(modifier: Modifier = Modifier) {
                         },
                         trailingContent = {
                             Button(
-                                onClick = {},
+                                onClick = { deleteValue(it) },
                                 content = { Text("Delete") },
                             )
                         },
