@@ -1,4 +1,4 @@
-package com.canyoufix.quicknote.presentation.newnote
+package com.canyoufix.quicknote.presentation.screens
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -23,7 +23,8 @@ import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.canyoufix.quicknote.R
-import com.canyoufix.quicknote.ui.theme.QuickNoteTheme
+import com.canyoufix.quicknote.presentation.viewmodels.NewNoteViewModel
+import com.canyoufix.quicknote.presentation.theme.QuickNoteTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -82,9 +83,10 @@ fun NewNoteScreen(
     }
 }
 
-@Preview(device = Devices.PIXEL_7_PRO, showSystemUi = true)
+@Preview(device = Devices.PIXEL_9_PRO, showSystemUi = true)
 @Composable
 private fun NewNoteScreen_Preview() {
+
     QuickNoteTheme {
         NewNoteScreen(
             onBackClick = {},

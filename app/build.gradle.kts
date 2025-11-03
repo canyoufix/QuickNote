@@ -39,6 +39,10 @@ kotlin {
 }
 
 dependencies {
+    // Room
+    implementation(libs.androidx.room.runtime)
+    ksp(libs.androidx.room.compiler)
+
     // Serialization
     implementation(libs.kotlin.serialization)
 

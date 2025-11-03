@@ -1,4 +1,4 @@
-package com.canyoufix.quicknote.data
+package com.canyoufix.quicknote.data.datastore
 
 import android.content.Context
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory

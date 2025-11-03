@@ -1,4 +1,4 @@
-package com.canyoufix.quicknote.presentation.navigation
+package com.canyoufix.quicknote.presentation.navigation.routes
 
 import androidx.navigation3.runtime.NavKey
 import kotlinx.serialization.Serializable
@@ -11,4 +11,10 @@ sealed class Route : NavKey {
 
     @Serializable
     data object NewNote : Route()
+
+    @Serializable
+    data object Trash : Route()
+
+    @Serializable
+    data object Settings : Route()
 }

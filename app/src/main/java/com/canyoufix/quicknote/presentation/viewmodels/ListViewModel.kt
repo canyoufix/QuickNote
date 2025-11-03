@@ -1,8 +1,8 @@
-package com.canyoufix.quicknote.presentation.list
+package com.canyoufix.quicknote.presentation.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.canyoufix.quicknote.data.NoteStorage
+import com.canyoufix.quicknote.data.datastore.NoteStorage
 import dagger.hilt.android.lifecycle.HiltViewModel
 import jakarta.inject.Inject
 import kotlinx.coroutines.launch

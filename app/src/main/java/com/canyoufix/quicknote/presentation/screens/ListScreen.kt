@@ -1,4 +1,4 @@
-package com.canyoufix.quicknote.presentation.list
+package com.canyoufix.quicknote.presentation.screens
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -35,10 +35,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.canyoufix.quicknote.domain.Note
-import com.canyoufix.quicknote.ui.theme.QuickNoteTheme
 import com.canyoufix.quicknote.R
+import com.canyoufix.quicknote.domain.Note
 import com.canyoufix.quicknote.extensions.plus
+import com.canyoufix.quicknote.presentation.theme.QuickNoteTheme
+import com.canyoufix.quicknote.presentation.viewmodels.ListViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -64,6 +65,9 @@ fun ListScreen(
                             modifier = Modifier.sizeIn(
                                 minWidth = this.maxWidth - 16.dp.times(2),
                             ),
+                            trailingIcon = {
+                                Icon(painterResource(R.drawable.ic_search), contentDescription = null)
+                            }
                         )
                     },
                 )
@@ -75,7 +79,7 @@ fun ListScreen(
                 content = { Icon(painterResource(R.drawable.ic_add), contentDescription = null) },
             )
         },
-        floatingActionButtonPosition = FabPosition.Center,
+        floatingActionButtonPosition = FabPosition.End,
         modifier = modifier,
     ) { innerPadding ->
         LazyVerticalStaggeredGrid(

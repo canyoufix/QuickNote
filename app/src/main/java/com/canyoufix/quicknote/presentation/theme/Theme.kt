@@ -1,6 +1,5 @@
-package com.canyoufix.quicknote.ui.theme
+package com.canyoufix.quicknote.presentation.theme
 
-import android.app.Activity
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme

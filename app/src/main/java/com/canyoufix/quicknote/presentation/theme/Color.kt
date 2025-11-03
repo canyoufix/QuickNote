@@ -1,4 +1,4 @@
-package com.canyoufix.quicknote.ui.theme
+package com.canyoufix.quicknote.presentation.theme
 
 import androidx.compose.ui.graphics.Color
 
