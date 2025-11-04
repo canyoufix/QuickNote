@@ -1,7 +1,10 @@
 package com.canyoufix.quicknote.presentation.screens
 
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -19,12 +22,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.canyoufix.quicknote.R
-import com.canyoufix.quicknote.presentation.viewmodels.NewNoteViewModel
 import com.canyoufix.quicknote.presentation.theme.QuickNoteTheme
+import com.canyoufix.quicknote.presentation.viewmodels.NewNoteViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -39,7 +43,8 @@ fun NewNoteScreen(
         }
     }
 
-    val state = rememberTextFieldState()
+    val titleState = rememberTextFieldState()
+    val contentState = rememberTextFieldState()
     Scaffold(
         topBar = {
             TopAppBar(
@@ -52,7 +57,7 @@ fun NewNoteScreen(
                 title = {},
                 actions = {
                     IconButton(
-                        onClick = { viewModel.onAddNoteClick(state.text.toString()) },
+                        onClick = { viewModel.onAddNoteClick(titleState.text.toString()) },
                         content = { Icon(painterResource(R.drawable.ic_check), contentDescription = null) },
                     )
                 },
@@ -64,22 +69,42 @@ fun NewNoteScreen(
         containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
         modifier = modifier,
     ) { innerPadding ->
-        TextField(
-            state = state,
-            colors = TextFieldDefaults.colors(
-                focusedContainerColor = Color.Transparent,
-                unfocusedContainerColor = Color.Transparent,
-                focusedIndicatorColor = Color.Transparent,
-                unfocusedIndicatorColor = Color.Transparent,
-                disabledIndicatorColor = Color.Transparent,
-                errorIndicatorColor = Color.Transparent,
-            ),
-            shape = RectangleShape,
-            placeholder = { Text("What do you want to note?") },
+        Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding),
-        )
+        ) {
+            TextField(
+                state = titleState,
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor = Color.Transparent,
+                    unfocusedContainerColor = Color.Transparent,
+                    focusedIndicatorColor = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent,
+                    disabledIndicatorColor = Color.Transparent,
+                    errorIndicatorColor = Color.Transparent,
+                ),
+                shape = RectangleShape,
+                placeholder = { Text(stringResource(R.string.title)) },
+                modifier = Modifier
+                    .padding(innerPadding)
+                    .wrapContentHeight()
+            )
+            TextField(
+                state = contentState,
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor = Color.Transparent,
+                    unfocusedContainerColor = Color.Transparent,
+                    focusedIndicatorColor = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent,
+                    disabledIndicatorColor = Color.Transparent,
+                    errorIndicatorColor = Color.Transparent,
+                ),
+                shape = RectangleShape,
+                placeholder = { Text("What do you want to note?") },
+                modifier = Modifier
+                    .fillMaxWidth()
+            )
+        }
     }
 }
 

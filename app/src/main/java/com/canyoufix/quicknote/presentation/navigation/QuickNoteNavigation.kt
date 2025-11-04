@@ -2,14 +2,13 @@ package com.canyoufix.quicknote.presentation.navigation
 
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
@@ -35,20 +34,17 @@ fun QuickNoteNavigation() {
 
 
     Scaffold(
+        contentWindowInsets = ScaffoldDefaults.contentWindowInsets
+            .only(WindowInsetsSides.Bottom + WindowInsetsSides.Horizontal),
         bottomBar = {
             if(showBottomBar){
-                NavigationBar(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp))
-                ) {
-                    QuickNoteBottomBar(
-                        currentRoute = backStack.lastOrNull() as? Route,
-                        onNavigate = { route ->
-                            backStack.add(route)
+                QuickNoteBottomBar(
+                    currentRoute = backStack.lastOrNull() as? Route,
+                    onNavigate = { route ->
+                        backStack.add(route)
 
-                        }
-                    )
-                }
+                    }
+                )
             }
         }
     ) { innerPadding ->

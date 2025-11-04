@@ -70,3 +70,46 @@ fun QuickNoteBottomBar(
         )
     }
 }
+
+
+/*
+sealed class BottomBarTab(
+    val route: Route,
+    val icon: Int,
+    val label: Int
+){
+    object Notes : BottomBarTab(Route.List, R.drawable.ic_note_stack, R.string.notes)
+    object Trash : BottomBarTab(Route.Trash, R.drawable.ic_delete, R.string.trash)
+    object Settings : BottomBarTab(Route.Settings, R.drawable.ic_settings, R.string.settings)
+
+    companion object {
+        val allTabs = listOf(Notes, Trash, Settings)
+    }
+}
+
+@Composable
+fun QuickNoteBottomBar(
+    currentRoute: Route?,
+    onNavigate: (Route) -> Unit,
+){
+    NavigationBar(
+        modifier = Modifier
+            .clip(RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp))
+    ) {
+        BottomBarTab.allTabs.forEach { tab ->
+            NavigationBarItem(
+                icon = {
+                    Icon(
+                        painter = painterResource(tab.icon),
+                        contentDescription = null,
+                        modifier = Modifier.size(28.dp)
+                    )
+                },
+                label = { Text(text = stringResource(tab.label)) },
+                selected = currentRoute == tab.route,
+                onClick = { onNavigate(tab.route) }
+            )
+        }
+    }
+}
+*/

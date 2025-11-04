@@ -1,5 +1,7 @@
 package com.canyoufix.quicknote.presentation.screens
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -7,7 +9,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.items
@@ -16,6 +17,8 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SearchBarDefaults
@@ -29,7 +32,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -45,7 +50,6 @@ import com.canyoufix.quicknote.presentation.viewmodels.ListViewModel
 @Composable
 fun ListScreen(
     onAddClick: () -> Unit,
-    modifier: Modifier = Modifier,
     viewModel: ListViewModel = hiltViewModel(),
 ) {
     val textList by viewModel.notes.collectAsStateWithLifecycle(emptyList())
@@ -61,14 +65,26 @@ fun ListScreen(
                         SearchBarDefaults.InputField(
                             textFieldState = textFieldState,
                             searchBarState = searchBarState,
-                            onSearch = {},
-                            modifier = Modifier.sizeIn(
-                                minWidth = this.maxWidth - 16.dp.times(2),
-                            ),
+                            onSearch = { TODO() },
                             trailingIcon = {
-                                Icon(painterResource(R.drawable.ic_search), contentDescription = null)
+                                IconButton(
+                                    onClick = { TODO() },
+                                ){
+                                    Icon(painterResource(R.drawable.ic_search), contentDescription = null)
+                                }
+                            },
+                            placeholder = {
+                                Text(stringResource(R.string.search))
                             }
                         )
+                    },
+                    modifier = Modifier
+                        .background(MaterialTheme.colorScheme.primary)
+                        .pointerInput(Unit) {
+                        detectTapGestures(onTap = {
+                            searchBarState.currentValue
+
+                        })
                     },
                 )
             }
@@ -80,7 +96,7 @@ fun ListScreen(
             )
         },
         floatingActionButtonPosition = FabPosition.End,
-        modifier = modifier,
+
     ) { innerPadding ->
         LazyVerticalStaggeredGrid(
             columns = StaggeredGridCells.Adaptive(200.dp),
