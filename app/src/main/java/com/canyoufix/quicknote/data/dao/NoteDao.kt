@@ -10,12 +10,37 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface NoteDao {
 
-    @Insert()
+    @Insert
     suspend fun addNote(note: NoteEntity)
+
+    @Query("SELECT * FROM notes WHERE id = :id LIMIT 1")
+    suspend fun getNoteById(id: String): NoteEntity
+
+    @Query("SELECT * FROM notes WHERE is_visible = 1")
+    fun getAllNotes(): Flow<List<NoteEntity>>
+
+    @Query("SELECT * FROM notes WHERE is_visible = 0")
+    fun getAllDeletedNotes(): Flow<List<NoteEntity>>
+
+    @Query("SELECT * FROM notes LIMIT :limit OFFSET :offset")
+    suspend fun getNotesPaged(offset: Int, limit: Int): List<NoteEntity>
+
+    @Query("SELECT * FROM notes WHERE content LIKE '%' || :query || '%'")
+    fun searchNotes(query: String): Flow<List<NoteEntity>>
 
     @Delete
     suspend fun deleteNote(note: NoteEntity)
 
-    @Query("SELECT * FROM notes WHERE id = :id LIMIT 1")
-    fun getNoteById(id: String): Flow<NoteEntity>
+    @Query("UPDATE notes " +
+            "SET is_visible = 0, deleted_at = :time " +
+            "WHERE id = :id")
+    suspend fun softDeleteNote(id: String, time: Long)
+
+    @Query("UPDATE notes " +
+            "SET is_visible = 1, deleted_at = null " +
+            "WHERE id = :id")
+    suspend fun returnNoteToList(id: String)
+
+    @Query("DELETE FROM notes WHERE id = :id")
+    suspend fun deleteNoteById(id: String)
 }

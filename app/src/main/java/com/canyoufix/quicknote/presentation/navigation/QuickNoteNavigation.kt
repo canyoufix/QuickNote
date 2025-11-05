@@ -18,8 +18,8 @@ import com.canyoufix.quicknote.presentation.components.QuickNoteBottomBar
 import com.canyoufix.quicknote.presentation.navigation.routes.Route
 import com.canyoufix.quicknote.presentation.screens.ListScreen
 import com.canyoufix.quicknote.presentation.screens.NewNoteScreen
+import com.canyoufix.quicknote.presentation.screens.RecycleBinScreen
 import com.canyoufix.quicknote.presentation.screens.SettingsScreen
-import com.canyoufix.quicknote.presentation.screens.TrashScreen
 
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
@@ -71,7 +71,7 @@ fun QuickNoteNavigation() {
                     }
 
                     entry<Route.Trash> {
-                        TrashScreen(
+                        RecycleBinScreen(
                             //onBackClick = { backStack.add(Route.Trash) },
                         )
                     }

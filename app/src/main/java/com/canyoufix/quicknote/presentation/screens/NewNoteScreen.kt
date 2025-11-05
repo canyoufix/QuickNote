@@ -57,7 +57,7 @@ fun NewNoteScreen(
                 title = {},
                 actions = {
                     IconButton(
-                        onClick = { viewModel.onAddNoteClick(titleState.text.toString()) },
+                        onClick = { viewModel.onAddNoteClick(titleState.text.toString(), contentState.text.toString()) },
                         content = { Icon(painterResource(R.drawable.ic_check), contentDescription = null) },
                     )
                 },

@@ -14,8 +14,6 @@ import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.items
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FabPosition
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -32,11 +30,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Devices
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -44,16 +41,14 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.canyoufix.quicknote.R
 import com.canyoufix.quicknote.domain.Note
 import com.canyoufix.quicknote.extensions.plus
-import com.canyoufix.quicknote.presentation.theme.QuickNoteTheme
 import com.canyoufix.quicknote.presentation.viewmodels.ListViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ListScreen(
-    onAddClick: () -> Unit,
+fun RecycleBinScreen(
     viewModel: ListViewModel = hiltViewModel(),
 ) {
-    val textList by viewModel.notes.collectAsStateWithLifecycle(emptyList())
+    val textList by viewModel.deletedNotes.collectAsStateWithLifecycle(emptyList())
     val textFieldState = rememberTextFieldState()
     val searchBarState = rememberSearchBarState()
 
@@ -91,15 +86,7 @@ fun ListScreen(
                     },
             )
         },
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = onAddClick,
-                content = { Icon(painterResource(R.drawable.ic_add), contentDescription = null) },
-            )
-        },
-        floatingActionButtonPosition = FabPosition.End,
-
-    ) { innerPadding ->
+        ) { innerPadding ->
         LazyVerticalStaggeredGrid(
             columns = StaggeredGridCells.Adaptive(200.dp),
             contentPadding = innerPadding + PaddingValues(16.dp),
@@ -110,9 +97,10 @@ fun ListScreen(
                 items = textList,
                 key = { it.id },
             ) {
-                NoteItem(
+                NoteItemRecycleBin(
                     note = it,
-                    onDismiss = { viewModel.softDeleteNote(it.id, System.currentTimeMillis()) },
+                    onSwipeLeft = { viewModel.deleteNote(it.id) },
+                    onSwipeRight = { viewModel.returnNoteToList(it.id) },
                 )
             }
         }
@@ -120,12 +108,14 @@ fun ListScreen(
 }
 
 @Composable
-fun NoteItem(
+fun NoteItemRecycleBin(
     note: Note,
-    onDismiss: () -> Unit,
+    onSwipeLeft: () -> Unit,
+    onSwipeRight: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val state = rememberSwipeToDismissBoxState()
+
     SwipeToDismissBox(
         state = state,
         backgroundContent = {
@@ -133,14 +123,24 @@ fun NoteItem(
                 contentAlignment = when (state.dismissDirection) {
                     SwipeToDismissBoxValue.StartToEnd -> Alignment.CenterStart
                     SwipeToDismissBoxValue.EndToStart -> Alignment.CenterEnd
-                    SwipeToDismissBoxValue.Settled -> Alignment.Center
+                    else -> Alignment.Center
                 },
                 modifier = Modifier.fillMaxSize(),
             ) {
-                Icon(painterResource(R.drawable.ic_delete), contentDescription = null)
+                if (state.dismissDirection == SwipeToDismissBoxValue.StartToEnd) {
+                    Icon(painterResource(R.drawable.ic_return), contentDescription = null, tint = Color.Green)
+                } else if (state.dismissDirection == SwipeToDismissBoxValue.EndToStart) {
+                    Icon(painterResource(R.drawable.ic_delete), contentDescription = null, tint = Color.Red)
+                }
             }
         },
-        onDismiss = { onDismiss() },
+        onDismiss = {
+            when (state.dismissDirection) {
+                SwipeToDismissBoxValue.StartToEnd -> onSwipeRight()
+                SwipeToDismissBoxValue.EndToStart -> onSwipeLeft()
+                else -> {}
+            }
+        },
         modifier = modifier,
     ) {
         OutlinedCard(
@@ -148,13 +148,11 @@ fun NoteItem(
         ) {
             Column(
                 modifier = Modifier.padding(16.dp)
-
             ) {
                 Text(
                     text = note.title,
-                    modifier = Modifier
-                        .padding(bottom = 4.dp),
-                    fontSize = 16.sp
+                    fontSize = 16.sp,
+                    modifier = Modifier.padding(bottom = 4.dp)
                 )
                 Text(
                     text = note.content,
@@ -162,15 +160,5 @@ fun NoteItem(
                 )
             }
         }
-    }
-}
-
-@Preview(device = Devices.PIXEL_9_PRO, showSystemUi = true)
-@Composable
-private fun ListScreen_Preview() {
-    QuickNoteTheme {
-        ListScreen(
-            onAddClick = {},
-        )
     }
 }

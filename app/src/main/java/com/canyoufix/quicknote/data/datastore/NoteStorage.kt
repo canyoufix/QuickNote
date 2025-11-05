@@ -35,13 +35,13 @@ class NoteStorage @Inject constructor(
         }
     }
 
-    suspend fun addNote(text: String) {
-        notesList.edit {
-            val currentData = it[PrefsDataKey] ?: emptySet()
-            val newNote = Note(text = text)
-            it[PrefsDataKey] = currentData + json.encodeToString(newNote)
-        }
-    }
+//    suspend fun addNote(text: String) {
+//        notesList.edit {
+//            val currentData = it[PrefsDataKey] ?: emptySet()
+//            val newNote = Note(text = text)
+//            it[PrefsDataKey] = currentData + json.encodeToString(newNote)
+//        }
+//    }
 
     suspend fun deleteNote(id: String) {
         notesList.edit { prefs ->
