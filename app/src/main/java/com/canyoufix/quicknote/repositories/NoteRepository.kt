@@ -1,6 +1,5 @@
 package com.canyoufix.quicknote.repositories
 
-import android.util.Log
 import com.canyoufix.quicknote.data.database.QuickNoteDatabase
 import com.canyoufix.quicknote.data.entities.NoteEntity
 import com.canyoufix.quicknote.domain.Note
@@ -56,15 +55,11 @@ class NoteRepository @Inject constructor(
     }
 
     fun searchNotes(query: String): Flow<List<Note>> =
-        db.dao().searchNotes(query)
-            .map { entities ->
-                // 🔹 Логируем все полученные NoteEntity
-                entities.forEach { Log.d("NoteRepository", "Entity: $it") }
-
-                // 🔹 Преобразуем в Note
-                entities.map { it.toNote() }
+        db.dao().searchNotes(query).map { entities ->
+            entities.map{
+                it.toNote()
             }
-
+        }
 
     suspend fun restoreDeletedNotes(deletedTime: Long){
         db.dao().restoreDeletedNotes(deletedTime)

@@ -1,12 +1,10 @@
 package com.canyoufix.quicknote.presentation.screens
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
@@ -28,11 +26,12 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopSearchBar
 import androidx.compose.material3.rememberSearchBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Devices
@@ -63,6 +62,12 @@ fun ListScreen(
     val message = stringResource(R.string.note_deleted)
     val actionLabel = stringResource(R.string.cancel)
 
+    val focusManager = LocalFocusManager.current
+
+    LaunchedEffect(textFieldState.text) {
+        viewModel.onSearchQueryChanged(textFieldState.text as String)
+    }
+
     Scaffold(
         topBar = {
             Row(
@@ -79,34 +84,29 @@ fun ListScreen(
                             searchBarState = searchBarState,
                             onSearch = {
                                 viewModel.onSearchQueryChanged(textFieldState.text.toString())
+                                focusManager.clearFocus()
+                            },
+                            leadingIcon = {
+                                Icon(
+                                    painterResource(R.drawable.ic_search),
+                                    contentDescription = null,
+                                    modifier = Modifier.align(Alignment.CenterVertically)
+                                )
                             },
                             trailingIcon = {
-                                Row(){
-                                    if (textFieldState.text.isNotEmpty()){
-                                        IconButton(
-                                            onClick = {
-                                                textFieldState.edit {
-                                                    replace(0, textFieldState.text.length, "")
-                                                }
-                                            },
-                                        ){
-                                            Icon(
-                                                painterResource(R.drawable.ic_close),
-                                                contentDescription = null,
-                                                modifier = Modifier.size(20.dp)
-                                            )
-                                        }
-                                    }
-
+                                if (textFieldState.text.isNotEmpty()){
                                     IconButton(
                                         onClick = {
-                                            viewModel.onSearchQueryChanged(textFieldState.text.toString())
+                                            textFieldState.edit {
+                                                replace(0, textFieldState.text.length, "")
+                                            }
+                                            focusManager.clearFocus()
                                         },
-                                        modifier = Modifier.align(Alignment.CenterVertically)
-                                    ) {
+                                    ){
                                         Icon(
-                                            painterResource(R.drawable.ic_search),
-                                            contentDescription = null
+                                            painterResource(R.drawable.ic_close),
+                                            contentDescription = null,
+                                            modifier = Modifier.size(20.dp)
                                         )
                                     }
                                 }
@@ -116,27 +116,9 @@ fun ListScreen(
                             }
                         )
                     },
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(start = 8.dp, top = 4.dp, bottom = 4.dp)
-                        .pointerInput(Unit) {
-                            detectTapGestures(onTap = {
-                                searchBarState.currentValue
-                            })
-                        }
-
+                    modifier = Modifier.weight(1f)
                 )
-
-                IconButton(
-                    onClick = { },
-                ) {
-                    Icon(
-                        painterResource(R.drawable.ic_menu),
-                        contentDescription = null
-                    )
-                }
             }
-
         },
         floatingActionButton = {
             FloatingActionButton(

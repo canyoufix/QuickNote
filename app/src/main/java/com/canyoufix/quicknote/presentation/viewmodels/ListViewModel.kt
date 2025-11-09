@@ -1,6 +1,5 @@
 package com.canyoufix.quicknote.presentation.viewmodels
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.canyoufix.quicknote.domain.Note
@@ -23,12 +22,9 @@ class ListViewModel @Inject constructor(
     private val noteRepository: NoteRepository,
 ) : ViewModel() {
 
-    // TODO
     private val searchQuery = MutableStateFlow("")
     fun onSearchQueryChanged(query: String){
         searchQuery.value = query
-        Log.d("NoteRepository", "!!!! $query")
-
     }
 
     val notes: Flow<List<Note>> = searchQuery
