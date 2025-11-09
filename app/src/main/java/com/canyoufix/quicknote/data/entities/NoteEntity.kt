@@ -13,5 +13,6 @@ data class NoteEntity(
     val content: String,
     val created_at: Long,
     val deleted_at: Long?,
-    val is_visible: Boolean = true
+    val is_visible: Boolean = true,
+    val is_pinned: Boolean = false
 )

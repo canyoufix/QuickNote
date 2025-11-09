@@ -3,12 +3,11 @@ package com.canyoufix.quicknote.presentation.screens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.items
@@ -19,17 +18,18 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SearchBarDefaults
-import androidx.compose.material3.SwipeToDismissBox
-import androidx.compose.material3.SwipeToDismissBoxValue
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopSearchBar
 import androidx.compose.material3.rememberSearchBarState
-import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
@@ -38,14 +38,14 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.canyoufix.quicknote.R
-import com.canyoufix.quicknote.domain.Note
 import com.canyoufix.quicknote.extensions.plus
+import com.canyoufix.quicknote.presentation.components.NoteItemList
 import com.canyoufix.quicknote.presentation.theme.QuickNoteTheme
 import com.canyoufix.quicknote.presentation.viewmodels.ListViewModel
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -53,43 +53,90 @@ fun ListScreen(
     onAddClick: () -> Unit,
     viewModel: ListViewModel = hiltViewModel(),
 ) {
-    val textList by viewModel.notes.collectAsStateWithLifecycle(emptyList())
+    val notes by viewModel.notes.collectAsStateWithLifecycle(emptyList())
     val textFieldState = rememberTextFieldState()
     val searchBarState = rememberSearchBarState()
 
+    val snackbarHostState = SnackbarHostState()
+    val scope = rememberCoroutineScope()
+
+    val message = stringResource(R.string.note_deleted)
+    val actionLabel = stringResource(R.string.cancel)
+
     Scaffold(
         topBar = {
-            TopSearchBar(
-                state = searchBarState,
-                inputField = {
-                    SearchBarDefaults.InputField(
-                        textFieldState = textFieldState,
-                        searchBarState = searchBarState,
-                        onSearch = { TODO() },
-                        trailingIcon = {
-                            IconButton(
-                                onClick = { TODO() },
-                            ) {
-                                Icon(
-                                    painterResource(R.drawable.ic_search),
-                                    contentDescription = null
-                                )
-                            }
-                        },
-                        placeholder = {
-                            Text(stringResource(R.string.search))
-                        }
-                    )
-                },
-                modifier = Modifier
-                    .background(MaterialTheme.colorScheme.primary)
-                    .pointerInput(Unit) {
-                        detectTapGestures(onTap = {
-                            searchBarState.currentValue
+            Row(
+                modifier = Modifier.fillMaxWidth()
+                    .background(MaterialTheme.colorScheme.primary),
+                        verticalAlignment = Alignment.CenterVertically,
 
-                        })
+            ){
+                TopSearchBar(
+                    state = searchBarState,
+                    inputField = {
+                        SearchBarDefaults.InputField(
+                            textFieldState = textFieldState,
+                            searchBarState = searchBarState,
+                            onSearch = {
+                                viewModel.onSearchQueryChanged(textFieldState.text.toString())
+                            },
+                            trailingIcon = {
+                                Row(){
+                                    if (textFieldState.text.isNotEmpty()){
+                                        IconButton(
+                                            onClick = {
+                                                textFieldState.edit {
+                                                    replace(0, textFieldState.text.length, "")
+                                                }
+                                            },
+                                        ){
+                                            Icon(
+                                                painterResource(R.drawable.ic_close),
+                                                contentDescription = null,
+                                                modifier = Modifier.size(20.dp)
+                                            )
+                                        }
+                                    }
+
+                                    IconButton(
+                                        onClick = {
+                                            viewModel.onSearchQueryChanged(textFieldState.text.toString())
+                                        },
+                                        modifier = Modifier.align(Alignment.CenterVertically)
+                                    ) {
+                                        Icon(
+                                            painterResource(R.drawable.ic_search),
+                                            contentDescription = null
+                                        )
+                                    }
+                                }
+                            },
+                            placeholder = {
+                                Text(stringResource(R.string.search))
+                            }
+                        )
                     },
-            )
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(start = 8.dp, top = 4.dp, bottom = 4.dp)
+                        .pointerInput(Unit) {
+                            detectTapGestures(onTap = {
+                                searchBarState.currentValue
+                            })
+                        }
+
+                )
+
+                IconButton(
+                    onClick = { },
+                ) {
+                    Icon(
+                        painterResource(R.drawable.ic_menu),
+                        contentDescription = null
+                    )
+                }
+            }
+
         },
         floatingActionButton = {
             FloatingActionButton(
@@ -98,7 +145,9 @@ fun ListScreen(
             )
         },
         floatingActionButtonPosition = FabPosition.End,
-
+        snackbarHost = {
+            SnackbarHost(hostState = snackbarHostState)
+        }
     ) { innerPadding ->
         LazyVerticalStaggeredGrid(
             columns = StaggeredGridCells.Adaptive(200.dp),
@@ -107,58 +156,28 @@ fun ListScreen(
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             items(
-                items = textList,
+                items = notes,
                 key = { it.id },
             ) {
-                NoteItem(
+                NoteItemList(
                     note = it,
-                    onDismiss = { viewModel.softDeleteNote(it.id, System.currentTimeMillis()) },
-                )
-            }
-        }
-    }
-}
+                    onSwipeLeft = {
+                        viewModel.softDeleteNote(it.id, System.currentTimeMillis())
+                        scope.launch {
+                            val result = snackbarHostState.showSnackbar(
+                                message = message,
+                                actionLabel = actionLabel,
+                                withDismissAction = true,
+                                duration = SnackbarDuration.Short
+                            )
 
-@Composable
-fun NoteItem(
-    note: Note,
-    onDismiss: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val state = rememberSwipeToDismissBoxState()
-    SwipeToDismissBox(
-        state = state,
-        backgroundContent = {
-            Box(
-                contentAlignment = when (state.dismissDirection) {
-                    SwipeToDismissBoxValue.StartToEnd -> Alignment.CenterStart
-                    SwipeToDismissBoxValue.EndToStart -> Alignment.CenterEnd
-                    SwipeToDismissBoxValue.Settled -> Alignment.Center
-                },
-                modifier = Modifier.fillMaxSize(),
-            ) {
-                Icon(painterResource(R.drawable.ic_delete), contentDescription = null)
-            }
-        },
-        onDismiss = { onDismiss() },
-        modifier = modifier,
-    ) {
-        OutlinedCard(
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            Column(
-                modifier = Modifier.padding(16.dp)
-
-            ) {
-                Text(
-                    text = note.title,
-                    modifier = Modifier
-                        .padding(bottom = 4.dp),
-                    fontSize = 16.sp
-                )
-                Text(
-                    text = note.content,
-                    fontSize = 12.sp
+                            if (result == SnackbarResult.ActionPerformed) {
+                                viewModel.restoreDeletedNotes(System.currentTimeMillis())
+                            }
+                        }
+                    },
+                    onSwipeRight = { viewModel.togglePinNote(it.id, !it.is_pinned) },
+                    isPinned = it.is_pinned
                 )
             }
         }

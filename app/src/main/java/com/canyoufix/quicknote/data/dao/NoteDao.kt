@@ -25,8 +25,16 @@ interface NoteDao {
     @Query("SELECT * FROM notes LIMIT :limit OFFSET :offset")
     suspend fun getNotesPaged(offset: Int, limit: Int): List<NoteEntity>
 
-    @Query("SELECT * FROM notes WHERE content LIKE '%' || :query || '%'")
+    @Query("""
+        SELECT * FROM notes
+        WHERE (title LIKE '%' || :query || '%' OR content LIKE '%' || :query || '%')
+        AND is_visible = 1
+    """)
     fun searchNotes(query: String): Flow<List<NoteEntity>>
+
+
+    @Query("UPDATE notes SET is_pinned = :isPinned WHERE id = :id")
+    suspend fun togglePinNote(id: String, isPinned: Boolean)
 
     @Delete
     suspend fun deleteNote(note: NoteEntity)
@@ -43,4 +51,9 @@ interface NoteDao {
 
     @Query("DELETE FROM notes WHERE id = :id")
     suspend fun deleteNoteById(id: String)
+
+    @Query("UPDATE notes " +
+            "SET is_visible = 1 " +
+            "WHERE deleted_at <= :deletedTime")
+    suspend fun restoreDeletedNotes(deletedTime: Long)
 }
