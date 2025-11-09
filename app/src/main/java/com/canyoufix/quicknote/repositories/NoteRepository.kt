@@ -61,6 +61,14 @@ class NoteRepository @Inject constructor(
             }
         }
 
+    fun searchDeletedNotes(query: String): Flow<List<Note>> =
+        db.dao().searchDeletedNotes(query).map { entities ->
+            entities.map{
+                it.toNote()
+            }
+        }
+
+
     suspend fun restoreDeletedNotes(deletedTime: Long){
         db.dao().restoreDeletedNotes(deletedTime)
     }

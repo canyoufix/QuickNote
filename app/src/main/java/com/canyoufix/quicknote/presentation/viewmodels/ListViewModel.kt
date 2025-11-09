@@ -23,8 +23,12 @@ class ListViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val searchQuery = MutableStateFlow("")
+    private val searchQueryDeleted = MutableStateFlow("")
     fun onSearchQueryChanged(query: String){
         searchQuery.value = query
+    }
+    fun onSearchQueryDeletedChanged(query: String){
+        searchQueryDeleted.value = query
     }
 
     val notes: Flow<List<Note>> = searchQuery
@@ -37,7 +41,15 @@ class ListViewModel @Inject constructor(
             }
         }
 
-    val deletedNotes = noteRepository.getAllDeletedNotes()
+    val deletedNotes: Flow<List<Note>> = searchQueryDeleted
+        .debounce(300)
+        .flatMapLatest { query ->
+            if (query.isNotEmpty()) {
+                noteRepository.searchDeletedNotes(query)
+            } else {
+                noteRepository.getAllDeletedNotes()
+            }
+        }
 
     fun deleteNote(id: String) {
         viewModelScope.launch {

@@ -32,6 +32,13 @@ interface NoteDao {
     """)
     fun searchNotes(query: String): Flow<List<NoteEntity>>
 
+    @Query("""
+        SELECT * FROM notes
+        WHERE (title LIKE '%' || :query || '%' OR content LIKE '%' || :query || '%')
+        AND is_visible = 0
+    """)
+    fun searchDeletedNotes(query: String): Flow<List<NoteEntity>>
+
 
     @Query("UPDATE notes SET is_pinned = :isPinned WHERE id = :id")
     suspend fun togglePinNote(id: String, isPinned: Boolean)

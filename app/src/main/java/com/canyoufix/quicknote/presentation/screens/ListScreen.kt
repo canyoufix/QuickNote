@@ -18,10 +18,8 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SearchBarDefaults
-import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopSearchBar
 import androidx.compose.material3.rememberSearchBarState
@@ -41,10 +39,9 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.canyoufix.quicknote.R
 import com.canyoufix.quicknote.extensions.plus
-import com.canyoufix.quicknote.presentation.components.NoteItemList
+import com.canyoufix.quicknote.presentation.components.NoteCard
 import com.canyoufix.quicknote.presentation.theme.QuickNoteTheme
 import com.canyoufix.quicknote.presentation.viewmodels.ListViewModel
-import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -104,7 +101,7 @@ fun ListScreen(
                                         },
                                     ){
                                         Icon(
-                                            painterResource(R.drawable.ic_close),
+                                            painterResource(R.drawable.ic_cancel),
                                             contentDescription = null,
                                             modifier = Modifier.size(20.dp)
                                         )
@@ -141,25 +138,8 @@ fun ListScreen(
                 items = notes,
                 key = { it.id },
             ) {
-                NoteItemList(
+                NoteCard(
                     note = it,
-                    onSwipeLeft = {
-                        viewModel.softDeleteNote(it.id, System.currentTimeMillis())
-                        scope.launch {
-                            val result = snackbarHostState.showSnackbar(
-                                message = message,
-                                actionLabel = actionLabel,
-                                withDismissAction = true,
-                                duration = SnackbarDuration.Short
-                            )
-
-                            if (result == SnackbarResult.ActionPerformed) {
-                                viewModel.restoreDeletedNotes(System.currentTimeMillis())
-                            }
-                        }
-                    },
-                    onSwipeRight = { viewModel.togglePinNote(it.id, !it.is_pinned) },
-                    isPinned = it.is_pinned
                 )
             }
         }

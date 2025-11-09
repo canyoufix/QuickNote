@@ -8,4 +8,7 @@
     <string name="title">Title</string>
     <string name="note_deleted">Note deleted</string>
     <string name="cancel">Cancel</string>
+    <string name="no_title">No title</string>
+    <string name="no_content">No content</string>
+
 </resources>

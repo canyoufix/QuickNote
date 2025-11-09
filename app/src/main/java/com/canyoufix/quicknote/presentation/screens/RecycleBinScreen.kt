@@ -1,9 +1,11 @@
 package com.canyoufix.quicknote.presentation.screens
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.items
@@ -18,9 +20,11 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopSearchBar
 import androidx.compose.material3.rememberSearchBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -28,7 +32,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.canyoufix.quicknote.R
 import com.canyoufix.quicknote.extensions.plus
-import com.canyoufix.quicknote.presentation.components.NoteItemRecycleBin
+import com.canyoufix.quicknote.presentation.components.NoteCard
 import com.canyoufix.quicknote.presentation.viewmodels.ListViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -40,39 +44,63 @@ fun RecycleBinScreen(
     val textFieldState = rememberTextFieldState()
     val searchBarState = rememberSearchBarState()
 
+    val focusManager = LocalFocusManager.current
+
+    LaunchedEffect(textFieldState.text) {
+        viewModel.onSearchQueryDeletedChanged(textFieldState.text as String)
+    }
+
     Scaffold(
         topBar = {
-            TopSearchBar(
-                state = searchBarState,
-                inputField = {
-                    SearchBarDefaults.InputField(
-                        textFieldState = textFieldState,
-                        searchBarState = searchBarState,
-                        onSearch = { TODO() },
-                        trailingIcon = {
-                            IconButton(
-                                onClick = { TODO() },
-                            ) {
+            Row(
+                modifier = Modifier.fillMaxWidth()
+                    .background(MaterialTheme.colorScheme.primary),
+                verticalAlignment = Alignment.CenterVertically,
+
+                ){
+                TopSearchBar(
+                    state = searchBarState,
+                    inputField = {
+                        SearchBarDefaults.InputField(
+                            textFieldState = textFieldState,
+                            searchBarState = searchBarState,
+                            onSearch = {
+                                viewModel.onSearchQueryChanged(textFieldState.text.toString())
+                                focusManager.clearFocus()
+                            },
+                            leadingIcon = {
                                 Icon(
                                     painterResource(R.drawable.ic_search),
-                                    contentDescription = null
+                                    contentDescription = null,
+                                    modifier = Modifier.align(Alignment.CenterVertically)
                                 )
+                            },
+                            trailingIcon = {
+                                if (textFieldState.text.isNotEmpty()){
+                                    IconButton(
+                                        onClick = {
+                                            textFieldState.edit {
+                                                replace(0, textFieldState.text.length, "")
+                                            }
+                                            focusManager.clearFocus()
+                                        },
+                                    ){
+                                        Icon(
+                                            painterResource(R.drawable.ic_cancel),
+                                            contentDescription = null,
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                    }
+                                }
+                            },
+                            placeholder = {
+                                Text(stringResource(R.string.search))
                             }
-                        },
-                        placeholder = {
-                            Text(stringResource(R.string.search))
-                        }
-                    )
-                },
-                modifier = Modifier
-                    .background(MaterialTheme.colorScheme.primary)
-                    .pointerInput(Unit) {
-                        detectTapGestures(onTap = {
-                            searchBarState.currentValue
-
-                        })
+                        )
                     },
-            )
+                    modifier = Modifier.weight(1f)
+                )
+            }
         },
         ) { innerPadding ->
         LazyVerticalStaggeredGrid(
@@ -85,10 +113,8 @@ fun RecycleBinScreen(
                 items = textList,
                 key = { it.id },
             ) {
-                NoteItemRecycleBin(
-                    note = it,
-                    onSwipeLeft = { viewModel.deleteNote(it.id) },
-                    onSwipeRight = { viewModel.returnNoteToList(it.id) }
+                NoteCard(
+                    note = it
                 )
             }
         }
