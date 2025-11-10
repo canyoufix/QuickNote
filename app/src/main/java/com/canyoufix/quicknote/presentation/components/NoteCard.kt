@@ -1,8 +1,11 @@
 package com.canyoufix.quicknote.presentation.components
 
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Text
@@ -22,6 +25,9 @@ import java.util.Locale
 @Composable
 fun NoteCard(
     note: Note,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+    onLongClick: () -> Unit
 ){
     val dateString = remember(note.created_at) {
         val noteDate = Calendar.getInstance().apply { timeInMillis = note.created_at }
@@ -35,19 +41,34 @@ fun NoteCard(
             SimpleDateFormat("HH:mm", Locale.getDefault())
         } else {
             // Full date
-            SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
+            SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault())
         }
 
         format.format(Date(note.created_at))
     }
 
     OutlinedCard(
-        modifier = Modifier.fillMaxWidth(),
-
+        modifier = Modifier
+            .fillMaxWidth()
+            .combinedClickable(
+                onClick = onClick,
+                onLongClick = onLongClick
+            ),
+        colors = CardDefaults.outlinedCardColors(
+            containerColor = if (isSelected) {
+                MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
+            } else {
+                MaterialTheme.colorScheme.surface
+            },
+        ),
+        border = if (note.is_pinned) {
+            BorderStroke(2.dp, MaterialTheme.colorScheme.primary)
+        } else {
+            BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
+        }
     ) {
         Column(
             modifier = Modifier.padding(16.dp)
-
         ) {
             Text(
                 text = note.title.ifBlank { stringResource(R.string.no_title) },

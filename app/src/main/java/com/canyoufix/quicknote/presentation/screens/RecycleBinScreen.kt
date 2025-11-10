@@ -1,38 +1,27 @@
 package com.canyoufix.quicknote.presentation.screens
 
-import androidx.compose.foundation.background
+import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.items
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SearchBarDefaults
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopSearchBar
 import androidx.compose.material3.rememberSearchBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.canyoufix.quicknote.R
 import com.canyoufix.quicknote.extensions.plus
 import com.canyoufix.quicknote.presentation.components.NoteCard
+import com.canyoufix.quicknote.presentation.components.SearchTopBar
+import com.canyoufix.quicknote.presentation.components.SelectionTopBar
 import com.canyoufix.quicknote.presentation.viewmodels.ListViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -40,9 +29,18 @@ import com.canyoufix.quicknote.presentation.viewmodels.ListViewModel
 fun RecycleBinScreen(
     viewModel: ListViewModel = hiltViewModel(),
 ) {
+    DisposableEffect(Unit) {
+        onDispose {
+            viewModel.clearSelection()
+        }
+    }
+
     val textList by viewModel.deletedNotes.collectAsStateWithLifecycle(emptyList())
     val textFieldState = rememberTextFieldState()
     val searchBarState = rememberSearchBarState()
+
+    val selectedNotes by viewModel.selectedNoted.collectAsStateWithLifecycle()
+    val isSelectionMode by viewModel.isSelectionMode.collectAsStateWithLifecycle()
 
     val focusManager = LocalFocusManager.current
 
@@ -52,54 +50,38 @@ fun RecycleBinScreen(
 
     Scaffold(
         topBar = {
-            Row(
-                modifier = Modifier.fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.primary),
-                verticalAlignment = Alignment.CenterVertically,
-
-                ){
-                TopSearchBar(
-                    state = searchBarState,
-                    inputField = {
-                        SearchBarDefaults.InputField(
-                            textFieldState = textFieldState,
-                            searchBarState = searchBarState,
-                            onSearch = {
-                                viewModel.onSearchQueryChanged(textFieldState.text.toString())
-                                focusManager.clearFocus()
-                            },
-                            leadingIcon = {
-                                Icon(
-                                    painterResource(R.drawable.ic_search),
-                                    contentDescription = null,
-                                    modifier = Modifier.align(Alignment.CenterVertically)
-                                )
-                            },
-                            trailingIcon = {
-                                if (textFieldState.text.isNotEmpty()){
-                                    IconButton(
-                                        onClick = {
-                                            textFieldState.edit {
-                                                replace(0, textFieldState.text.length, "")
-                                            }
-                                            focusManager.clearFocus()
-                                        },
-                                    ){
-                                        Icon(
-                                            painterResource(R.drawable.ic_cancel),
-                                            contentDescription = null,
-                                            modifier = Modifier.size(20.dp)
-                                        )
-                                    }
-                                }
-                            },
-                            placeholder = {
-                                Text(stringResource(R.string.search))
-                            }
-                        )
-                    },
-                    modifier = Modifier.weight(1f)
-                )
+            Crossfade(
+                targetState = isSelectionMode
+            ) { selecionMode ->
+                if (selecionMode) {
+                    SelectionTopBar(
+                        isRecycleBin = true,
+                        onBackClick = {
+                            viewModel.clearSelection()
+                        },
+                        onUnpinClick = {
+                            viewModel.unpinSelected()
+                        },
+                        onPinClick = {
+                            viewModel.pinSelected()
+                        },
+                        onRestoreClick = {
+                            viewModel.restoreSelectedNotes()
+                        },
+                        onDeleteClick = {
+                            viewModel.deleteSelected()
+                        },
+                    )
+                } else {
+                    SearchTopBar(
+                        textFieldState = textFieldState,
+                        searchBarState = searchBarState,
+                        onSearch = {
+                            viewModel.onSearchQueryChanged(textFieldState.text.toString())
+                            focusManager.clearFocus()
+                        }
+                    )
+                }
             }
         },
         ) { innerPadding ->
@@ -114,7 +96,18 @@ fun RecycleBinScreen(
                 key = { it.id },
             ) {
                 NoteCard(
-                    note = it
+                    note = it,
+                    isSelected = it.id in selectedNotes,
+                    onClick = {
+                        if (isSelectionMode){
+                            viewModel.toggleSelection(it.id)
+                        } else {
+                            // TODO
+                        }
+                    },
+                    onLongClick = {
+                        viewModel.toggleSelection(it.id)
+                    }
                 )
             }
         }

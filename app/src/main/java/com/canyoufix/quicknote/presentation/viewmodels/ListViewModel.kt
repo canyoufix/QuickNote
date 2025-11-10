@@ -10,8 +10,14 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 @HiltViewModel
@@ -22,16 +28,71 @@ class ListViewModel @Inject constructor(
     private val noteRepository: NoteRepository,
 ) : ViewModel() {
 
-    private val searchQuery = MutableStateFlow("")
-    private val searchQueryDeleted = MutableStateFlow("")
+    private val _searchQuery = MutableStateFlow("")
+    private val _searchQueryDeleted = MutableStateFlow("")
     fun onSearchQueryChanged(query: String){
-        searchQuery.value = query
+        _searchQuery.value = query
     }
     fun onSearchQueryDeletedChanged(query: String){
-        searchQueryDeleted.value = query
+        _searchQueryDeleted.value = query
     }
 
-    val notes: Flow<List<Note>> = searchQuery
+
+    // Selection
+    private val _selectedNotes = MutableStateFlow<Set<String>>(emptySet())
+    val selectedNoted: StateFlow<Set<String>> = _selectedNotes.asStateFlow()
+
+    val isSelectionMode: StateFlow<Boolean> = _selectedNotes
+        .map { it.isNotEmpty() }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, false)
+
+    fun toggleSelection(id: String){
+        _selectedNotes.update { current ->
+            if (id in current) current - id else current + id
+        }
+    }
+
+    fun clearSelection(){
+        _selectedNotes.value = emptySet()
+    }
+
+    fun softDeleteSelected(){
+        viewModelScope.launch {
+            _selectedNotes.value.forEach { id ->
+                softDeleteNote(id)
+            }
+            clearSelection()
+        }
+    }
+
+    fun deleteSelected(){
+        viewModelScope.launch {
+            _selectedNotes.value.forEach { id ->
+                deleteNote(id)
+            }
+            clearSelection()
+        }
+    }
+
+    fun pinSelected(){
+        viewModelScope.launch {
+            _selectedNotes.value.forEach { id ->
+                noteRepository.pinNote(id)
+            }
+            clearSelection()
+        }
+    }
+
+    fun unpinSelected(){
+        viewModelScope.launch {
+            _selectedNotes.value.forEach { id ->
+                noteRepository.unpinNote(id)
+            }
+            clearSelection()
+        }
+    }
+
+    val notes: Flow<List<Note>> = _searchQuery
         .debounce(300)
         .flatMapLatest { query ->
             if (query.isNotEmpty()) {
@@ -41,7 +102,8 @@ class ListViewModel @Inject constructor(
             }
         }
 
-    val deletedNotes: Flow<List<Note>> = searchQueryDeleted
+
+    val deletedNotes: Flow<List<Note>> = _searchQueryDeleted
         .debounce(300)
         .flatMapLatest { query ->
             if (query.isNotEmpty()) {
@@ -57,18 +119,30 @@ class ListViewModel @Inject constructor(
         }
     }
 
-    fun togglePinNote(id: String, isPinned: Boolean){
-        viewModelScope.launch {
-            noteRepository.togglePinNote(id, isPinned)
-        }
 
-    }
 
-    fun softDeleteNote(id: String, time: Long) {
+    fun softDeleteNote(id: String) {
         viewModelScope.launch {
-            noteRepository.softDeleteNote(id, time)
+            noteRepository.softDeleteNote(id, System.currentTimeMillis())
         }
     }
+
+    fun restoreSelectedNotes(){
+        viewModelScope.launch {
+            _selectedNotes.value.forEach { id ->
+                noteRepository.restoreDeletedNote(id)
+            }
+            clearSelection()
+        }
+    }
+
+//    private val _selectedFilter = MutableStateFlow<NoteFilter>(NoteFilter.All)
+//    val selectedFilter: StateFlow<NoteFilter> = _selectedFilter.asStateFlow()
+//
+//    fun onFilterSelected(filter: NoteFilter) {
+//        _selectedFilter.value = filter
+//    }
+
 
     fun getNote(id: String){
         viewModelScope.launch {
@@ -78,7 +152,7 @@ class ListViewModel @Inject constructor(
 
     fun returnNoteToList(id: String){
         viewModelScope.launch {
-            noteRepository.returnNoteToList(id)
+            noteRepository.restoreDeletedNote(id)
         }
     }
 

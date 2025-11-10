@@ -1,11 +1,9 @@
 package com.canyoufix.quicknote.presentation.screens
 
-import androidx.compose.foundation.background
+import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.items
@@ -14,21 +12,15 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopSearchBar
 import androidx.compose.material3.rememberSearchBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -40,6 +32,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.canyoufix.quicknote.R
 import com.canyoufix.quicknote.extensions.plus
 import com.canyoufix.quicknote.presentation.components.NoteCard
+import com.canyoufix.quicknote.presentation.components.SearchTopBar
+import com.canyoufix.quicknote.presentation.components.SelectionTopBar
 import com.canyoufix.quicknote.presentation.theme.QuickNoteTheme
 import com.canyoufix.quicknote.presentation.viewmodels.ListViewModel
 
@@ -49,9 +43,18 @@ fun ListScreen(
     onAddClick: () -> Unit,
     viewModel: ListViewModel = hiltViewModel(),
 ) {
+    DisposableEffect(Unit) {
+        onDispose {
+            viewModel.clearSelection()
+        }
+    }
+
     val notes by viewModel.notes.collectAsStateWithLifecycle(emptyList())
     val textFieldState = rememberTextFieldState()
     val searchBarState = rememberSearchBarState()
+
+    val selectedNotes by viewModel.selectedNoted.collectAsStateWithLifecycle()
+    val isSelectionMode by viewModel.isSelectionMode.collectAsStateWithLifecycle()
 
     val snackbarHostState = SnackbarHostState()
     val scope = rememberCoroutineScope()
@@ -67,54 +70,35 @@ fun ListScreen(
 
     Scaffold(
         topBar = {
-            Row(
-                modifier = Modifier.fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.primary),
-                        verticalAlignment = Alignment.CenterVertically,
-
-            ){
-                TopSearchBar(
-                    state = searchBarState,
-                    inputField = {
-                        SearchBarDefaults.InputField(
-                            textFieldState = textFieldState,
-                            searchBarState = searchBarState,
-                            onSearch = {
-                                viewModel.onSearchQueryChanged(textFieldState.text.toString())
-                                focusManager.clearFocus()
-                            },
-                            leadingIcon = {
-                                Icon(
-                                    painterResource(R.drawable.ic_search),
-                                    contentDescription = null,
-                                    modifier = Modifier.align(Alignment.CenterVertically)
-                                )
-                            },
-                            trailingIcon = {
-                                if (textFieldState.text.isNotEmpty()){
-                                    IconButton(
-                                        onClick = {
-                                            textFieldState.edit {
-                                                replace(0, textFieldState.text.length, "")
-                                            }
-                                            focusManager.clearFocus()
-                                        },
-                                    ){
-                                        Icon(
-                                            painterResource(R.drawable.ic_cancel),
-                                            contentDescription = null,
-                                            modifier = Modifier.size(20.dp)
-                                        )
-                                    }
-                                }
-                            },
-                            placeholder = {
-                                Text(stringResource(R.string.search))
-                            }
-                        )
-                    },
-                    modifier = Modifier.weight(1f)
-                )
+            Crossfade(
+                targetState = isSelectionMode
+            ) { selecionMode ->
+                if (selecionMode) {
+                    SelectionTopBar(
+                        isRecycleBin = false,
+                        onUnpinClick = {
+                            viewModel.unpinSelected()
+                        },
+                        onBackClick = {
+                            viewModel.clearSelection()
+                        },
+                        onPinClick = {
+                            viewModel.pinSelected()
+                        },
+                        onDeleteClick = {
+                            viewModel.softDeleteSelected()
+                        }
+                    )
+                } else {
+                    SearchTopBar(
+                        textFieldState = textFieldState,
+                        searchBarState = searchBarState,
+                        onSearch = {
+                            viewModel.onSearchQueryChanged(textFieldState.text.toString())
+                            focusManager.clearFocus()
+                        }
+                    )
+                }
             }
         },
         floatingActionButton = {
@@ -128,19 +112,37 @@ fun ListScreen(
             SnackbarHost(hostState = snackbarHostState)
         }
     ) { innerPadding ->
-        LazyVerticalStaggeredGrid(
-            columns = StaggeredGridCells.Adaptive(200.dp),
-            contentPadding = innerPadding + PaddingValues(16.dp),
-            verticalItemSpacing = 8.dp,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            items(
-                items = notes,
-                key = { it.id },
+        Column {
+//            FilterRow(
+//                filters = filters,
+//                selectedFilter = selectedFilter,
+//                onFilterSelected = { selectedFilter = it }
+//            )
+            LazyVerticalStaggeredGrid(
+                columns = StaggeredGridCells.Adaptive(200.dp),
+                contentPadding = innerPadding + PaddingValues(16.dp),
+                verticalItemSpacing = 8.dp,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                NoteCard(
-                    note = it,
-                )
+                items(
+                    items = notes,
+                    key = { it.id },
+                ) {
+                    NoteCard(
+                        note = it,
+                        isSelected = it.id in selectedNotes,
+                        onClick = {
+                            if (isSelectionMode) {
+                                viewModel.toggleSelection(it.id)
+                            } else {
+                                // TODO
+                            }
+                        },
+                        onLongClick = {
+                            viewModel.toggleSelection(it.id)
+                        }
+                    )
+                }
             }
         }
     }

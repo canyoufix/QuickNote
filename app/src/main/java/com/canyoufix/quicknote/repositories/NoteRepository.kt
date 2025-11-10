@@ -46,12 +46,20 @@ class NoteRepository @Inject constructor(
         db.dao().softDeleteNote(id, time)
     }
 
-    suspend fun returnNoteToList(id: String){
-        db.dao().returnNoteToList(id)
+    suspend fun restoreDeletedNote(id: String){
+        db.dao().restoreDeletedNote(id)
     }
 
-    suspend fun togglePinNote(id: String, isPinned: Boolean){
-        db.dao().togglePinNote(id, isPinned)
+    suspend fun togglePinNote(id: String){
+        db.dao().togglePinNote(id)
+    }
+
+    suspend fun pinNote(id: String){
+        db.dao().setPinnedNote(id, true)
+    }
+
+    suspend fun unpinNote(id: String){
+        db.dao().setPinnedNote(id, false)
     }
 
     fun searchNotes(query: String): Flow<List<Note>> =

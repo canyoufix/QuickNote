@@ -16,10 +16,32 @@ interface NoteDao {
     @Query("SELECT * FROM notes WHERE id = :id LIMIT 1")
     suspend fun getNoteById(id: String): NoteEntity
 
-    @Query("SELECT * FROM notes WHERE is_visible = 1")
+    @Query("""
+        SELECT * FROM notes 
+        WHERE is_visible = 1 
+        ORDER BY is_pinned DESC, created_at DESC
+    """)
     fun getAllNotes(): Flow<List<NoteEntity>>
 
-    @Query("SELECT * FROM notes WHERE is_visible = 0")
+    @Query("""
+        SELECT * FROM notes
+        WHERE is_visible = 1
+        ORDER BY created_at DESC
+    """)
+    fun getNotesNew(): Flow<List<NoteEntity>>
+
+    @Query("""
+        SELECT * FROM notes
+        WHERE is_visible = 1
+        ORDER BY created_at ASC
+    """)
+    fun getNotesOld(): Flow<List<NoteEntity>>
+
+    @Query("""
+        SELECT * FROM notes 
+        WHERE is_visible = 0 
+        ORDER BY is_pinned DESC, created_at DESC
+    """)
     fun getAllDeletedNotes(): Flow<List<NoteEntity>>
 
     @Query("SELECT * FROM notes LIMIT :limit OFFSET :offset")
@@ -40,8 +62,11 @@ interface NoteDao {
     fun searchDeletedNotes(query: String): Flow<List<NoteEntity>>
 
 
-    @Query("UPDATE notes SET is_pinned = :isPinned WHERE id = :id")
-    suspend fun togglePinNote(id: String, isPinned: Boolean)
+    @Query("UPDATE notes SET is_pinned = :pinned WHERE id = :id")
+    suspend fun setPinnedNote(id: String, pinned: Boolean)
+
+    @Query("UPDATE notes SET is_pinned = NOT is_pinned WHERE id = :id")
+    suspend fun togglePinNote(id: String)
 
     @Delete
     suspend fun deleteNote(note: NoteEntity)
@@ -54,7 +79,7 @@ interface NoteDao {
     @Query("UPDATE notes " +
             "SET is_visible = 1, deleted_at = null " +
             "WHERE id = :id")
-    suspend fun returnNoteToList(id: String)
+    suspend fun restoreDeletedNote(id: String)
 
     @Query("DELETE FROM notes WHERE id = :id")
     suspend fun deleteNoteById(id: String)
