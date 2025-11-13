@@ -13,8 +13,10 @@ import androidx.compose.material3.FabPosition
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.rememberSearchBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -36,6 +38,7 @@ import com.canyoufix.quicknote.presentation.components.SearchTopBar
 import com.canyoufix.quicknote.presentation.components.SelectionTopBar
 import com.canyoufix.quicknote.presentation.theme.QuickNoteTheme
 import com.canyoufix.quicknote.presentation.viewmodels.ListViewModel
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -43,37 +46,46 @@ fun ListScreen(
     onAddClick: () -> Unit,
     viewModel: ListViewModel = hiltViewModel(),
 ) {
+
+    // All notes
+    val notes by viewModel.notes.collectAsStateWithLifecycle(emptyList())
+    val selectedNotes by viewModel.selectedNotes.collectAsStateWithLifecycle()
+    val isSelectionMode by viewModel.isSelectionMode.collectAsStateWithLifecycle()
+
+    // Snackbar
+    val snackbarHostState = SnackbarHostState()
+    val snackBarMessage = stringResource(R.string.note_deleted)
+    val snackBarActionLabel = stringResource(R.string.cancel)
+
+    // SearchBar
+    val searchBarState = rememberSearchBarState()
+    val textFieldState = rememberTextFieldState()
+
+    // Scope
+    val scope = rememberCoroutineScope()
+
+    // Focus manager
+    val focusManager = LocalFocusManager.current
+
+    // Update notes on search text change
+    LaunchedEffect(textFieldState.text) {
+        viewModel.onSearchQueryChanged(textFieldState.text as String)
+    }
+
+    // Clear selected notes
     DisposableEffect(Unit) {
         onDispose {
             viewModel.clearSelection()
         }
     }
 
-    val notes by viewModel.notes.collectAsStateWithLifecycle(emptyList())
-    val textFieldState = rememberTextFieldState()
-    val searchBarState = rememberSearchBarState()
-
-    val selectedNotes by viewModel.selectedNoted.collectAsStateWithLifecycle()
-    val isSelectionMode by viewModel.isSelectionMode.collectAsStateWithLifecycle()
-
-    val snackbarHostState = SnackbarHostState()
-    val scope = rememberCoroutineScope()
-
-    val message = stringResource(R.string.note_deleted)
-    val actionLabel = stringResource(R.string.cancel)
-
-    val focusManager = LocalFocusManager.current
-
-    LaunchedEffect(textFieldState.text) {
-        viewModel.onSearchQueryChanged(textFieldState.text as String)
-    }
 
     Scaffold(
         topBar = {
             Crossfade(
                 targetState = isSelectionMode
-            ) { selecionMode ->
-                if (selecionMode) {
+            ) { selectionMode ->
+                if (selectionMode) {
                     SelectionTopBar(
                         isRecycleBin = false,
                         onUnpinClick = {
@@ -87,6 +99,26 @@ fun ListScreen(
                         },
                         onDeleteClick = {
                             viewModel.softDeleteSelected()
+
+                            if (snackbarHostState.currentSnackbarData == null) {
+                                scope.launch {
+                                    val result = snackbarHostState.showSnackbar(
+                                        message = snackBarMessage,
+                                        actionLabel = snackBarActionLabel,
+                                        withDismissAction = true,
+                                        duration = SnackbarDuration.Short
+                                    )
+
+                                    when(result){
+                                        SnackbarResult.ActionPerformed -> {
+                                            viewModel.undoDelete()
+                                        }
+                                        SnackbarResult.Dismissed -> {
+                                            viewModel.clearDeletedBuffer()
+                                        }
+                                    }
+                                }
+                            }
                         }
                     )
                 } else {

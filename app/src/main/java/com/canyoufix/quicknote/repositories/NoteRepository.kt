@@ -11,21 +11,21 @@ class NoteRepository @Inject constructor(
     private val db: QuickNoteDatabase
 ) {
     fun getAllNotes(): Flow<List<Note>> =
-        db.dao().getAllNotes().map { entities ->
+        db.dao().getNotes().map { entities ->
             entities.map {
                 it.toNote()
             }
         }
 
     fun getAllDeletedNotes(): Flow<List<Note>> =
-        db.dao().getAllDeletedNotes().map { entities ->
+        db.dao().getDeletedNotes().map { entities ->
             entities.map {
                 it.toNote()
             }
         }
 
     suspend fun getNoteById(id: String){
-        db.dao().getNoteById(id)
+        db.dao().getNote(id)
     }
 
     suspend fun addNote(title: String, content: String) {
@@ -39,7 +39,7 @@ class NoteRepository @Inject constructor(
     }
 
     suspend fun deleteNote(id: String){
-        db.dao().deleteNoteById(id)
+        db.dao().deleteNote(id)
     }
 
     suspend fun softDeleteNote(id: String, time: Long){
@@ -76,10 +76,6 @@ class NoteRepository @Inject constructor(
             }
         }
 
-
-    suspend fun restoreDeletedNotes(deletedTime: Long){
-        db.dao().restoreDeletedNotes(deletedTime)
-    }
 
     // Mappers
     private fun NoteEntity.toNote() = Note(

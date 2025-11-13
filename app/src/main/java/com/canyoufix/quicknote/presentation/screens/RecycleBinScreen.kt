@@ -39,7 +39,7 @@ fun RecycleBinScreen(
     val textFieldState = rememberTextFieldState()
     val searchBarState = rememberSearchBarState()
 
-    val selectedNotes by viewModel.selectedNoted.collectAsStateWithLifecycle()
+    val selectedNotes by viewModel.selectedNotes.collectAsStateWithLifecycle()
     val isSelectionMode by viewModel.isSelectionMode.collectAsStateWithLifecycle()
 
     val focusManager = LocalFocusManager.current
