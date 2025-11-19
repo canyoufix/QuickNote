@@ -1,6 +1,7 @@
-package com.canyoufix.quicknote.data.entities
+package com.canyoufix.quicknote.data.models
 
 sealed class NoteFilter {
+
     object Default : NoteFilter()
 
     object New : NoteFilter()

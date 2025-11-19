@@ -4,19 +4,25 @@ import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.items
 import androidx.compose.foundation.text.input.rememberTextFieldState
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
+import androidx.compose.material3.Text
 import androidx.compose.material3.rememberSearchBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -32,6 +38,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.canyoufix.quicknote.R
+import com.canyoufix.quicknote.data.models.NoteFilter
 import com.canyoufix.quicknote.extensions.plus
 import com.canyoufix.quicknote.presentation.components.NoteCard
 import com.canyoufix.quicknote.presentation.components.SearchTopBar
@@ -44,6 +51,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun ListScreen(
     onAddClick: () -> Unit,
+    onEditClick: () -> Unit,
     viewModel: ListViewModel = hiltViewModel(),
 ) {
 
@@ -66,6 +74,15 @@ fun ListScreen(
 
     // Focus manager
     val focusManager = LocalFocusManager.current
+
+    // Filter
+    val selectedFilter by viewModel.selectedFilter.collectAsStateWithLifecycle()
+
+    val filters = listOf(
+        NoteFilter.Default,
+        NoteFilter.New,
+        NoteFilter.Old
+    )
 
     // Update notes on search text change
     LaunchedEffect(textFieldState.text) {
@@ -145,14 +162,40 @@ fun ListScreen(
         }
     ) { innerPadding ->
         Column {
-//            FilterRow(
-//                filters = filters,
-//                selectedFilter = selectedFilter,
-//                onFilterSelected = { selectedFilter = it }
-//            )
+            LazyRow(
+                contentPadding = innerPadding + PaddingValues(
+                    top = 16.dp,
+                    start = 16.dp,
+                    end = 16.dp
+                ),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                items(filters) { filter ->
+                    val isSelected = selectedFilter == filter
+
+                    Button(
+                        onClick = { viewModel.setFilter(filter) },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (isSelected)
+                                MaterialTheme.colorScheme.primary
+                            else
+                                MaterialTheme.colorScheme.surfaceVariant,
+                            contentColor = MaterialTheme.colorScheme.onPrimary
+                        )
+                    ) {
+                        Text(
+                            text = when (filter) {
+                                NoteFilter.Default -> stringResource(R.string.filter_default)
+                                NoteFilter.New -> stringResource(R.string.filter_new)
+                                NoteFilter.Old -> stringResource(R.string.filter_old)
+                            }
+                        )
+                    }
+                }
+            }
             LazyVerticalStaggeredGrid(
                 columns = StaggeredGridCells.Adaptive(200.dp),
-                contentPadding = innerPadding + PaddingValues(16.dp),
+                contentPadding = PaddingValues(16.dp),
                 verticalItemSpacing = 8.dp,
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
@@ -186,6 +229,7 @@ private fun ListScreen_Preview() {
     QuickNoteTheme {
         ListScreen(
             onAddClick = {},
+            onEditClick = {}
         )
     }
 }

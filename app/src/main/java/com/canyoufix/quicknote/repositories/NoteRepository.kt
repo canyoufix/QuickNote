@@ -2,6 +2,7 @@ package com.canyoufix.quicknote.repositories
 
 import com.canyoufix.quicknote.data.database.QuickNoteDatabase
 import com.canyoufix.quicknote.data.entities.NoteEntity
+import com.canyoufix.quicknote.data.models.NoteFilter
 import com.canyoufix.quicknote.domain.Note
 import jakarta.inject.Inject
 import kotlinx.coroutines.flow.Flow
@@ -16,6 +17,19 @@ class NoteRepository @Inject constructor(
                 it.toNote()
             }
         }
+
+    fun getNotesFiltered(filter: NoteFilter): Flow<List<Note>> {
+        val sortBy = when(filter) {
+            NoteFilter.Default -> "default"
+            NoteFilter.New -> "new"
+            NoteFilter.Old -> "old"
+        }
+        return db.dao().getNotesFiltered(sortBy).map { entities ->
+            entities.map{
+                it.toNote()
+            }
+        }
+    }
 
     fun getAllDeletedNotes(): Flow<List<Note>> =
         db.dao().getDeletedNotes().map { entities ->

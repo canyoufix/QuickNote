@@ -29,6 +29,15 @@ interface NoteDao {
     @Query("SELECT * FROM notes LIMIT :limit OFFSET :offset")
     suspend fun getNotesPaged(offset: Int, limit: Int): List<NoteEntity>
 
+    @Query("""
+        SELECT * FROM notes
+        WHERE is_visible = 1
+        ORDER BY
+            CASE WHEN :sortBy = 'new' THEN created_at END DESC,
+            CASE WHEN :sortBy = 'old' THEN created_at END ASC
+    """)
+    fun getNotesFiltered(sortBy: String = "default"): Flow<List<NoteEntity>>
+
     @Insert
     suspend fun addNote(note: NoteEntity)
 
@@ -58,20 +67,6 @@ interface NoteDao {
         AND is_visible = 0
     """)
     fun searchDeletedNotes(query: String): Flow<List<NoteEntity>>
-
-    @Query("""
-        SELECT * FROM notes
-        WHERE is_visible = 1
-        ORDER BY created_at DESC
-    """)
-    fun getNotesNew(): Flow<List<NoteEntity>>
-
-    @Query("""
-        SELECT * FROM notes
-        WHERE is_visible = 1
-        ORDER BY created_at ASC
-    """)
-    fun getNotesOld(): Flow<List<NoteEntity>>
 
     @Query("UPDATE notes SET is_pinned = :pinned WHERE id = :id")
     suspend fun setPinnedNote(id: String, pinned: Boolean)

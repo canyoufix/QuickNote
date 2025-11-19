@@ -2,6 +2,7 @@ package com.canyoufix.quicknote.presentation.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.canyoufix.quicknote.data.models.NoteFilter
 import com.canyoufix.quicknote.domain.Note
 import com.canyoufix.quicknote.repositories.NoteRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -13,6 +14,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
@@ -41,6 +43,12 @@ class ListViewModel @Inject constructor(
         _searchQueryDeleted.value = query
     }
 
+    private val _selectedFilter = MutableStateFlow<NoteFilter>(NoteFilter.Default)
+    val selectedFilter: StateFlow<NoteFilter> = _selectedFilter.asStateFlow()
+
+    fun setFilter(filter: NoteFilter){
+        _selectedFilter.value = filter
+    }
 
     // Selection
     private val _selectedNotes = MutableStateFlow<Set<String>>(emptySet())
@@ -98,16 +106,22 @@ class ListViewModel @Inject constructor(
         }
     }
 
-    val notes: Flow<List<Note>> = _searchQuery
-        .debounce(300)
-        .flatMapLatest { query ->
-            if (query.isNotEmpty()) {
-                noteRepository.searchNotes(query)
-            } else {
+    val notes: Flow<List<Note>> = combine(
+        _searchQuery.debounce(300),
+        _selectedFilter
+    ) { query, filter ->
+        query to filter
+    }.flatMapLatest { (query, filter) ->
+        if (query.isNotEmpty()) {
+            noteRepository.searchNotes(query)
+        } else {
+            if (filter == NoteFilter.Default) {
                 noteRepository.getAllNotes()
+            } else {
+                noteRepository.getNotesFiltered(filter)
             }
         }
-
+    }
 
     val deletedNotes: Flow<List<Note>> = _searchQueryDeleted
         .debounce(300)
