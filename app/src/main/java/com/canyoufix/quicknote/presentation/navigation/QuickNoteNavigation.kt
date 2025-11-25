@@ -1,7 +1,7 @@
 package com.canyoufix.quicknote.presentation.navigation
 
 import androidx.compose.animation.ExperimentalSharedTransitionApi
-import androidx.compose.animation.SharedTransitionScope
+import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
@@ -48,7 +48,7 @@ fun QuickNoteNavigation() {
             }
         }
     ) { innerPadding ->
-        SharedTransitionScope {
+        SharedTransitionLayout {
             NavDisplay(
                 backStack = backStack,
                 entryDecorators = listOf(
@@ -61,6 +61,7 @@ fun QuickNoteNavigation() {
                     entry<Route.List> {
                         ListScreen(
                             onAddClick = { backStack.add(Route.NewNote) },
+                            //onEditClick = { backStack.add(Route.NewNote)}
                         )
                     }
 

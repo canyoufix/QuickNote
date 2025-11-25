@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridState
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.items
@@ -28,6 +29,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
@@ -51,7 +53,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun ListScreen(
     onAddClick: () -> Unit,
-    onEditClick: () -> Unit,
+    //onEditClick: () -> Unit,
     viewModel: ListViewModel = hiltViewModel(),
 ) {
 
@@ -83,6 +85,11 @@ fun ListScreen(
         NoteFilter.New,
         NoteFilter.Old
     )
+
+
+    val lazyListState = remember(selectedFilter ) {
+        LazyStaggeredGridState(0)
+    }
 
     // Update notes on search text change
     LaunchedEffect(textFieldState.text) {
@@ -197,7 +204,8 @@ fun ListScreen(
                 columns = StaggeredGridCells.Adaptive(200.dp),
                 contentPadding = PaddingValues(16.dp),
                 verticalItemSpacing = 8.dp,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                state = lazyListState
             ) {
                 items(
                     items = notes,
@@ -229,7 +237,7 @@ private fun ListScreen_Preview() {
     QuickNoteTheme {
         ListScreen(
             onAddClick = {},
-            onEditClick = {}
+            //onEditClick = {}
         )
     }
 }
