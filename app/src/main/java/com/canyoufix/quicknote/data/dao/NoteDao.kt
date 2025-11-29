@@ -3,6 +3,7 @@ package com.canyoufix.quicknote.data.dao
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
+import androidx.room.Update
 import com.canyoufix.quicknote.data.entities.NoteEntity
 import kotlinx.coroutines.flow.Flow
 
@@ -24,7 +25,7 @@ interface NoteDao {
     fun getDeletedNotes(): Flow<List<NoteEntity>>
 
     @Query("SELECT * FROM notes WHERE id = :id LIMIT 1")
-    suspend fun getNote(id: String): NoteEntity
+    fun getNote(id: String): Flow<NoteEntity>
 
     @Query("SELECT * FROM notes LIMIT :limit OFFSET :offset")
     suspend fun getNotesPaged(offset: Int, limit: Int): List<NoteEntity>
@@ -40,6 +41,16 @@ interface NoteDao {
 
     @Insert
     suspend fun addNote(note: NoteEntity)
+
+//    @Query("""
+//        UPDATE notes
+//        SET title = :title, content = :content
+//        WHERE id = :id
+//    """)
+//    suspend fun updateNote(id: String, title: String, content: String)
+
+    @Update
+    suspend fun updateNote(note: NoteEntity)
 
     @Query("DELETE FROM notes WHERE id = :id")
     suspend fun deleteNote(id: String)

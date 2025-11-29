@@ -2,7 +2,6 @@ package com.canyoufix.quicknote.presentation.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.canyoufix.quicknote.data.models.NoteFilter
 import com.canyoufix.quicknote.domain.Note
 import com.canyoufix.quicknote.repositories.NoteRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -14,7 +13,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
@@ -23,25 +21,28 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 @HiltViewModel
-@OptIn(FlowPreview::class,
-    ExperimentalCoroutinesApi::class
-)
-class ListViewModel @Inject constructor(
-    private val noteRepository: NoteRepository,
+@OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
+class RecycleBinViewModel @Inject constructor(
+    private val noteRepository: NoteRepository
 ) : ViewModel() {
 
-    // Search
+    // Search in RecycleBin
     private val _searchQuery = MutableStateFlow("")
+
     fun onSearchQueryChanged(query: String){
         _searchQuery.value = query
     }
 
-    // Filter
-    private val _selectedFilter = MutableStateFlow<NoteFilter>(NoteFilter.Default)
-    val selectedFilter: StateFlow<NoteFilter> = _selectedFilter.asStateFlow()
-    fun setFilter(filter: NoteFilter){
-        _selectedFilter.value = filter
-    }
+    // All deleted notes
+    val notes: Flow<List<Note>> = _searchQuery
+        .debounce(300)
+        .flatMapLatest { query ->
+            if (query.isNotEmpty()) {
+                noteRepository.searchDeletedNotes(query)
+            } else {
+                noteRepository.getAllDeletedNotes()
+            }
+        }
 
 
     // Selection
@@ -63,23 +64,35 @@ class ListViewModel @Inject constructor(
     }
 
 
-    // Edit note
-    fun editNote(note: Note){
+    // Delete notes
+    fun deleteNote(id: String) {
         viewModelScope.launch {
-            noteRepository.updateNote(note)
+            _deletedBuffer.add(id)
+            noteRepository.deleteNote(id)
         }
     }
-
-    // Delete notes
-    fun softDeleteSelected(){
+    fun deleteSelected(){
         viewModelScope.launch {
             _selectedNotes.value.forEach { id ->
-                softDeleteNote(id)
+                deleteNote(id)
             }
             clearSelection()
         }
     }
 
+
+    // Restore notes
+    fun restoreSelectedNotes() {
+        viewModelScope.launch {
+            _selectedNotes.value.forEach { id ->
+                noteRepository.restoreDeletedNote(id)
+            }
+            clearSelection()
+        }
+    }
+
+
+    // Pin / Unpin
     fun pinSelected(){
         viewModelScope.launch {
             _selectedNotes.value.forEach { id ->
@@ -95,31 +108,6 @@ class ListViewModel @Inject constructor(
                 noteRepository.unpinNote(id)
             }
             clearSelection()
-        }
-    }
-
-    // TODO
-    val notes: Flow<List<Note>> = combine(
-        _searchQuery.debounce(300),
-        _selectedFilter
-    ) { query, filter ->
-        query to filter
-    }.flatMapLatest { (query, filter) ->
-        if (query.isNotEmpty()) {
-            noteRepository.searchNotes(query)
-        } else {
-            if (filter == NoteFilter.Default) {
-                noteRepository.getAllNotes()
-            } else {
-                noteRepository.getNotesFiltered(filter)
-            }
-        }
-    }
-
-    fun softDeleteNote(id: String) {
-        viewModelScope.launch {
-            noteRepository.softDeleteNote(id, System.currentTimeMillis())
-            _deletedBuffer.add(id)
         }
     }
 

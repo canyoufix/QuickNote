@@ -14,5 +14,6 @@
     <string name="filter_default">Default</string>
     <string name="filter_new">New</string>
     <string name="filter_old">Old</string>
+    <string name="what_to_note">What do you want to note?</string>
 
 </resources>

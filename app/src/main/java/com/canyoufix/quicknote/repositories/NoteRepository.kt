@@ -38,9 +38,10 @@ class NoteRepository @Inject constructor(
             }
         }
 
-    suspend fun getNoteById(id: String){
-        db.dao().getNote(id)
-    }
+    suspend fun getNoteById(id: String): Flow<Note> =
+        db.dao().getNote(id).map { it ->
+            it.toNote()
+        }
 
     suspend fun addNote(title: String, content: String) {
         val note = Note(
@@ -50,6 +51,10 @@ class NoteRepository @Inject constructor(
             deleted_at = null
         )
         db.dao().addNote(note.toEntity())
+    }
+
+    suspend fun updateNote(note: Note){
+        db.dao().updateNote(note.toEntity())
     }
 
     suspend fun deleteNote(id: String){

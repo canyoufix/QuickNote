@@ -41,6 +41,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.canyoufix.quicknote.R
 import com.canyoufix.quicknote.data.models.NoteFilter
+import com.canyoufix.quicknote.domain.Note
 import com.canyoufix.quicknote.extensions.plus
 import com.canyoufix.quicknote.presentation.components.NoteCard
 import com.canyoufix.quicknote.presentation.components.SearchTopBar
@@ -53,7 +54,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun ListScreen(
     onAddClick: () -> Unit,
-    //onEditClick: () -> Unit,
+    onEditClick: (Note) -> Unit,
     viewModel: ListViewModel = hiltViewModel(),
 ) {
 
@@ -79,16 +80,16 @@ fun ListScreen(
 
     // Filter
     val selectedFilter by viewModel.selectedFilter.collectAsStateWithLifecycle()
-
     val filters = listOf(
         NoteFilter.Default,
         NoteFilter.New,
         NoteFilter.Old
     )
 
-
-    val lazyListState = remember(selectedFilter ) {
-        LazyStaggeredGridState(0)
+    // Scroll to top when apply filter
+    val gridState = remember { LazyStaggeredGridState() }
+    LaunchedEffect(selectedFilter) {
+        gridState.scrollToItem(0)
     }
 
     // Update notes on search text change
@@ -102,7 +103,6 @@ fun ListScreen(
             viewModel.clearSelection()
         }
     }
-
 
     Scaffold(
         topBar = {
@@ -201,15 +201,14 @@ fun ListScreen(
                 }
             }
             LazyVerticalStaggeredGrid(
+                state = gridState,
                 columns = StaggeredGridCells.Adaptive(200.dp),
                 contentPadding = PaddingValues(16.dp),
                 verticalItemSpacing = 8.dp,
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
-                state = lazyListState
             ) {
                 items(
                     items = notes,
-                    key = { it.id },
                 ) {
                     NoteCard(
                         note = it,
@@ -218,7 +217,7 @@ fun ListScreen(
                             if (isSelectionMode) {
                                 viewModel.toggleSelection(it.id)
                             } else {
-                                // TODO
+                                onEditClick(it)
                             }
                         },
                         onLongClick = {
@@ -237,7 +236,7 @@ private fun ListScreen_Preview() {
     QuickNoteTheme {
         ListScreen(
             onAddClick = {},
-            //onEditClick = {}
+            onEditClick = {}
         )
     }
 }

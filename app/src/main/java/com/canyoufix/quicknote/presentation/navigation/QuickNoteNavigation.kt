@@ -16,6 +16,7 @@ import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import com.canyoufix.quicknote.presentation.components.QuickNoteBottomBar
 import com.canyoufix.quicknote.presentation.navigation.routes.Route
+import com.canyoufix.quicknote.presentation.screens.EditNoteScreen
 import com.canyoufix.quicknote.presentation.screens.ListScreen
 import com.canyoufix.quicknote.presentation.screens.NewNoteScreen
 import com.canyoufix.quicknote.presentation.screens.RecycleBinScreen
@@ -61,7 +62,14 @@ fun QuickNoteNavigation() {
                     entry<Route.List> {
                         ListScreen(
                             onAddClick = { backStack.add(Route.NewNote) },
-                            //onEditClick = { backStack.add(Route.NewNote)}
+                            onEditClick = { backStack.add(Route.EditNote(it)) }
+                        )
+                    }
+
+                    entry<Route.EditNote>{ routeEditNote ->
+                        EditNoteScreen(
+                            onBackClick = { backStack.removeAt(backStack.lastIndex) },
+                            note = routeEditNote.note,
                         )
                     }
 

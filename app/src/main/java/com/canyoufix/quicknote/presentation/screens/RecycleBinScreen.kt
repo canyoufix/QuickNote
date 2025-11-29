@@ -22,12 +22,12 @@ import com.canyoufix.quicknote.extensions.plus
 import com.canyoufix.quicknote.presentation.components.NoteCard
 import com.canyoufix.quicknote.presentation.components.SearchTopBar
 import com.canyoufix.quicknote.presentation.components.SelectionTopBar
-import com.canyoufix.quicknote.presentation.viewmodels.ListViewModel
+import com.canyoufix.quicknote.presentation.viewmodels.RecycleBinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RecycleBinScreen(
-    viewModel: ListViewModel = hiltViewModel(),
+    viewModel: RecycleBinViewModel = hiltViewModel(),
 ) {
     DisposableEffect(Unit) {
         onDispose {
@@ -35,7 +35,7 @@ fun RecycleBinScreen(
         }
     }
 
-    val textList by viewModel.deletedNotes.collectAsStateWithLifecycle(emptyList())
+    val textList by viewModel.notes.collectAsStateWithLifecycle(emptyList())
     val textFieldState = rememberTextFieldState()
     val searchBarState = rememberSearchBarState()
 
@@ -45,7 +45,7 @@ fun RecycleBinScreen(
     val focusManager = LocalFocusManager.current
 
     LaunchedEffect(textFieldState.text) {
-        viewModel.onSearchQueryDeletedChanged(textFieldState.text as String)
+        viewModel.onSearchQueryChanged(textFieldState.text as String)
     }
 
     Scaffold(
