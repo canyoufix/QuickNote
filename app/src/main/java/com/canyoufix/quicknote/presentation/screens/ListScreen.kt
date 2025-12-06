@@ -171,7 +171,8 @@ fun ListScreen(
         Column {
             LazyRow(
                 contentPadding = innerPadding + PaddingValues(
-                    top = 16.dp,
+                    top = 8.dp,
+                    bottom = 8.dp,
                     start = 16.dp,
                     end = 16.dp
                 ),
