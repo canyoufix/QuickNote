@@ -1,0 +1,119 @@
+package com.canyoufix.quicknote.repositories
+
+import com.canyoufix.quicknote.data.database.QuickNoteDatabase
+import com.canyoufix.quicknote.data.entities.NoteEntity
+import com.canyoufix.quicknote.data.models.NoteFilter
+import com.canyoufix.quicknote.domain.Note
+import jakarta.inject.Inject
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
+
+class NoteRepository @Inject constructor(
+    private val db: QuickNoteDatabase
+) {
+    fun getAllNotes(): Flow<List<Note>> =
+        db.dao().getNotes().map { entities ->
+            entities.map {
+                it.toNote()
+            }
+        }
+
+    fun getNotesFiltered(filter: NoteFilter): Flow<List<Note>> {
+        val sortBy = when(filter) {
+            NoteFilter.Default -> "default"
+            NoteFilter.New -> "new"
+            NoteFilter.Old -> "old"
+        }
+        return db.dao().getNotesFiltered(sortBy).map { entities ->
+            entities.map{
+                it.toNote()
+            }
+        }
+    }
+
+    fun getAllDeletedNotes(): Flow<List<Note>> =
+        db.dao().getDeletedNotes().map { entities ->
+            entities.map {
+                it.toNote()
+            }
+        }
+
+    suspend fun getNoteById(id: String): Flow<Note> =
+        db.dao().getNote(id).map { it ->
+            it.toNote()
+        }
+
+    suspend fun addNote(title: String, content: String) {
+        val note = Note(
+            title = title,
+            content = content,
+            created_at = System.currentTimeMillis(),
+            deleted_at = null
+        )
+        db.dao().addNote(note.toEntity())
+    }
+
+    suspend fun updateNote(note: Note){
+        db.dao().updateNote(note.toEntity())
+    }
+
+    suspend fun deleteNote(id: String){
+        db.dao().deleteNote(id)
+    }
+
+    suspend fun softDeleteNote(id: String, time: Long){
+        db.dao().softDeleteNote(id, time)
+    }
+
+    suspend fun restoreDeletedNote(id: String){
+        db.dao().restoreDeletedNote(id)
+    }
+
+    suspend fun togglePinNote(id: String){
+        db.dao().togglePinNote(id)
+    }
+
+    suspend fun pinNote(id: String){
+        db.dao().setPinnedNote(id, true)
+    }
+
+    suspend fun unpinNote(id: String){
+        db.dao().setPinnedNote(id, false)
+    }
+
+    fun searchNotes(query: String): Flow<List<Note>> =
+        db.dao().searchNotes(query).map { entities ->
+            entities.map{
+                it.toNote()
+            }
+        }
+
+    fun searchDeletedNotes(query: String): Flow<List<Note>> =
+        db.dao().searchDeletedNotes(query).map { entities ->
+            entities.map{
+                it.toNote()
+            }
+        }
+
+
+    // Mappers
+    private fun NoteEntity.toNote() = Note(
+        id,
+        title,
+        content,
+        created_at,
+        deleted_at,
+        is_visible,
+        is_pinned
+    )
+
+    private fun Note.toEntity() = NoteEntity(
+        id,
+        title,
+        content,
+        created_at,
+        deleted_at,
+        is_visible,
+        is_pinned
+    )
+}

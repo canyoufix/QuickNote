@@ -10,5 +10,6 @@ import com.canyoufix.quicknote.data.entities.NoteEntity
     version = 1
 )
 abstract class QuickNoteDatabase: RoomDatabase() {
-    abstract fun noteDao(): NoteDao
+
+    abstract fun dao(): NoteDao
 }

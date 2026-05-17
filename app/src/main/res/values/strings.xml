@@ -6,4 +6,17 @@
     <string name="settings">Settings</string>
     <string name="search">Search...</string>
     <string name="title">Title</string>
+    <string name="note_deleted">Note deleted</string>
+    <string name="cancel">Cancel</string>
+    <string name="no_title">No title</string>
+    <string name="no_content">No content</string>
+    <string name="select_an_action">Select an action</string>
+    <string name="filter_default">Default</string>
+    <string name="filter_new">New</string>
+    <string name="filter_old">Old</string>
+    <string name="what_to_note">What do you want to note?</string>
+    <string name="easter_egg">Are you a QA engineer?</string>
+    <string name="list_empty">The list of notes is empty</string>
+    <string name="recyclebin_empty">The trash is empty</string>
+
 </resources>

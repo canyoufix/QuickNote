@@ -1,7 +1,7 @@
 package com.canyoufix.quicknote.presentation.navigation
 
 import androidx.compose.animation.ExperimentalSharedTransitionApi
-import androidx.compose.animation.SharedTransitionScope
+import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
@@ -16,10 +16,11 @@ import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import com.canyoufix.quicknote.presentation.components.QuickNoteBottomBar
 import com.canyoufix.quicknote.presentation.navigation.routes.Route
+import com.canyoufix.quicknote.presentation.screens.EditNoteScreen
 import com.canyoufix.quicknote.presentation.screens.ListScreen
 import com.canyoufix.quicknote.presentation.screens.NewNoteScreen
+import com.canyoufix.quicknote.presentation.screens.RecycleBinScreen
 import com.canyoufix.quicknote.presentation.screens.SettingsScreen
-import com.canyoufix.quicknote.presentation.screens.TrashScreen
 
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
@@ -48,7 +49,7 @@ fun QuickNoteNavigation() {
             }
         }
     ) { innerPadding ->
-        SharedTransitionScope {
+        SharedTransitionLayout {
             NavDisplay(
                 backStack = backStack,
                 entryDecorators = listOf(
@@ -61,6 +62,14 @@ fun QuickNoteNavigation() {
                     entry<Route.List> {
                         ListScreen(
                             onAddClick = { backStack.add(Route.NewNote) },
+                            onEditClick = { backStack.add(Route.EditNote(it)) }
+                        )
+                    }
+
+                    entry<Route.EditNote>{ routeEditNote ->
+                        EditNoteScreen(
+                            onBackClick = { backStack.removeAt(backStack.lastIndex) },
+                            note = routeEditNote.note,
                         )
                     }
 
@@ -71,7 +80,7 @@ fun QuickNoteNavigation() {
                     }
 
                     entry<Route.Trash> {
-                        TrashScreen(
+                        RecycleBinScreen(
                             //onBackClick = { backStack.add(Route.Trash) },
                         )
                     }

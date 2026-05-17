@@ -2,7 +2,7 @@ package com.canyoufix.quicknote.presentation.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.canyoufix.quicknote.data.datastore.NoteStorage
+import com.canyoufix.quicknote.repositories.NoteRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import jakarta.inject.Inject
 import kotlinx.coroutines.channels.BufferOverflow
@@ -12,7 +12,7 @@ import kotlinx.coroutines.launch
 
 @HiltViewModel
 class NewNoteViewModel @Inject constructor(
-    private val noteStorage: NoteStorage,
+    private val noteRepository: NoteRepository
 ) : ViewModel() {
 
     private val _noteCreatedEvent = MutableSharedFlow<Unit>(
@@ -21,9 +21,9 @@ class NewNoteViewModel @Inject constructor(
     )
     val noteCreatedEvent = _noteCreatedEvent.asSharedFlow()
 
-    fun onAddNoteClick(text: String) {
+    fun onAddNoteClick(title: String, content: String) {
         viewModelScope.launch {
-            noteStorage.addNote(text)
+            noteRepository.addNote(title, content)
             _noteCreatedEvent.emit(Unit)
         }
     }

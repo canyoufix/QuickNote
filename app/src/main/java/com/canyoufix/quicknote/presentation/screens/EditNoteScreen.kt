@@ -23,29 +23,34 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Devices
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.canyoufix.quicknote.R
-import com.canyoufix.quicknote.presentation.theme.QuickNoteTheme
-import com.canyoufix.quicknote.presentation.viewmodels.NewNoteViewModel
+import com.canyoufix.quicknote.domain.Note
+import com.canyoufix.quicknote.presentation.viewmodels.ListViewModel
+import kotlin.uuid.ExperimentalUuidApi
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalUuidApi::class)
 @Composable
-fun NewNoteScreen(
+fun EditNoteScreen(
     onBackClick: () -> Unit,
+    note: Note,
     modifier: Modifier = Modifier,
-    viewModel: NewNoteViewModel = hiltViewModel(),
+    viewModel: ListViewModel = hiltViewModel()
 ) {
 
-    LaunchedEffect(viewModel) {
-        viewModel.noteCreatedEvent.collect {
-            onBackClick()
-        }
-    }
-
+    // State
     val titleState = rememberTextFieldState()
     val contentState = rememberTextFieldState()
+
+    LaunchedEffect(Unit) {
+        titleState.edit {
+            append(note.title)
+        }
+
+        contentState.edit {
+            append(note.content)
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -59,7 +64,22 @@ fun NewNoteScreen(
                 title = {},
                 actions = {
                     IconButton(
-                        onClick = { viewModel.onAddNoteClick(titleState.text.toString(), contentState.text.toString()) },
+                        onClick = {
+                            val title = titleState.text.toString()
+                            val content = contentState.text.toString()
+
+                            if (note.title == title && note.content == content){
+                                onBackClick()
+                            } else{
+                                val editedNote = note.copy(
+                                    title = title,
+                                    content = content,
+                                    created_at = System.currentTimeMillis()
+                                )
+                                viewModel.editNote(editedNote)
+                                onBackClick()
+                            }
+                        },
                         content = { Icon(painterResource(R.drawable.ic_check), contentDescription = null) },
                     )
                 },
@@ -107,16 +127,5 @@ fun NewNoteScreen(
                     .fillMaxWidth()
             )
         }
-    }
-}
-
-@Preview(device = Devices.PIXEL_9_PRO, showSystemUi = true)
-@Composable
-private fun NewNoteScreen_Preview() {
-
-    QuickNoteTheme {
-        NewNoteScreen(
-            onBackClick = {},
-        )
     }
 }
