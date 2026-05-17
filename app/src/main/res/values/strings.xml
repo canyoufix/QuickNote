@@ -16,5 +16,7 @@
     <string name="filter_old">Old</string>
     <string name="what_to_note">What do you want to note?</string>
     <string name="easter_egg">Are you a QA engineer?</string>
+    <string name="list_empty">The list of notes is empty</string>
+    <string name="recyclebin_empty">The trash is empty</string>
 
 </resources>

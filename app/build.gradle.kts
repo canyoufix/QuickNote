@@ -40,6 +40,9 @@ kotlin {
 }
 
 dependencies {
+    // Material3
+    implementation(libs.androidx.material3)
+
     // Room
     implementation(libs.androidx.room.runtime)
     ksp(libs.androidx.room.compiler)

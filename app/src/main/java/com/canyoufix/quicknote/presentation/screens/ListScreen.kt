@@ -4,6 +4,8 @@ import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridState
@@ -31,6 +33,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -201,30 +205,44 @@ fun ListScreen(
                     }
                 }
             }
-            LazyVerticalStaggeredGrid(
-                state = gridState,
-                columns = StaggeredGridCells.Adaptive(200.dp),
-                contentPadding = PaddingValues(16.dp),
-                verticalItemSpacing = 8.dp,
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                items(
-                    items = notes,
+            if (notes.isEmpty()) {
+                Column(
+                    modifier = Modifier.fillMaxSize(),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    NoteCard(
-                        note = it,
-                        isSelected = it.id in selectedNotes,
-                        onClick = {
-                            if (isSelectionMode) {
-                                viewModel.toggleSelection(it.id)
-                            } else {
-                                onEditClick(it)
-                            }
-                        },
-                        onLongClick = {
-                            viewModel.toggleSelection(it.id)
-                        }
+                    Text(
+                        text = stringResource(R.string.list_empty),
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
+                }
+            } else {
+                LazyVerticalStaggeredGrid(
+                    state = gridState,
+                    columns = StaggeredGridCells.Adaptive(200.dp),
+                    contentPadding = PaddingValues(16.dp),
+                    verticalItemSpacing = 8.dp,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    items(
+                        items = notes,
+                    ) {
+                        NoteCard(
+                            note = it,
+                            isSelected = it.id in selectedNotes,
+                            onClick = {
+                                if (isSelectionMode) {
+                                    viewModel.toggleSelection(it.id)
+                                } else {
+                                    onEditClick(it)
+                                }
+                            },
+                            onLongClick = {
+                                viewModel.toggleSelection(it.id)
+                            }
+                        )
+                    }
                 }
             }
         }
